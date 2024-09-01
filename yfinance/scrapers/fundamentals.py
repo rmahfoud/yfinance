@@ -48,26 +48,26 @@ class Financials:
         self._balance_sheet_time_series = {}
         self._cash_flow_time_series = {}
 
-    def get_income_time_series(self, freq="yearly", proxy=None) -> pd.DataFrame:
+    def get_income_time_series(self, freq="yearly", proxy=None, enddate=None) -> pd.DataFrame:
         res = self._income_time_series
         if freq not in res:
-            res[freq] = self._fetch_time_series("income", freq, proxy)
+            res[freq] = self._fetch_time_series("income", freq, proxy, enddate)
         return res[freq]
 
-    def get_balance_sheet_time_series(self, freq="yearly", proxy=None) -> pd.DataFrame:
+    def get_balance_sheet_time_series(self, freq="yearly", proxy=None, enddate=None) -> pd.DataFrame:
         res = self._balance_sheet_time_series
         if freq not in res:
-            res[freq] = self._fetch_time_series("balance-sheet", freq, proxy)
+            res[freq] = self._fetch_time_series("balance-sheet", freq, proxy, enddate)
         return res[freq]
 
-    def get_cash_flow_time_series(self, freq="yearly", proxy=None) -> pd.DataFrame:
+    def get_cash_flow_time_series(self, freq="yearly", proxy=None, enddate=None) -> pd.DataFrame:
         res = self._cash_flow_time_series
         if freq not in res:
-            res[freq] = self._fetch_time_series("cash-flow", freq, proxy)
+            res[freq] = self._fetch_time_series("cash-flow", freq, proxy, enddate)
         return res[freq]
 
     @utils.log_indent_decorator
-    def _fetch_time_series(self, name, timescale, proxy=None):
+    def _fetch_time_series(self, name, timescale, proxy=None, enddate=None):
         # Fetching time series preferred over scraping 'QuoteSummaryStore',
         # because it matches what Yahoo shows. But for some tickers returns nothing,
         # despite 'QuoteSummaryStore' containing valid data.
@@ -81,7 +81,7 @@ class Financials:
             raise ValueError(f"Illegal argument: timescale must be one of: {allowed_timescales}")
 
         try:
-            statement = self._create_financials_table(name, timescale, proxy)
+            statement = self._create_financials_table(name, timescale, proxy, enddate)
 
             if statement is not None:
                 return statement
@@ -89,7 +89,7 @@ class Financials:
             utils.get_yf_logger().error(f"{self._symbol}: Failed to create {name} financials table for reason: {e}")
         return pd.DataFrame()
 
-    def _create_financials_table(self, name, timescale, proxy):
+    def _create_financials_table(self, name, timescale, proxy, enddate):
         if name == "income":
             # Yahoo stores the 'income' table internally under 'financials' key
             name = "financials"
@@ -97,11 +97,11 @@ class Financials:
         keys = const.fundamentals_keys[name]
 
         try:
-            return self.get_financials_time_series(timescale, keys, proxy)
+            return self.get_financials_time_series(timescale, keys, proxy, enddate)
         except Exception:
             pass
 
-    def get_financials_time_series(self, timescale, keys: list, proxy=None) -> pd.DataFrame:
+    def get_financials_time_series(self, timescale, keys: list, proxy=None, enddate=None) -> pd.DataFrame:
         timescale_translation = {"yearly": "annual", "quarterly": "quarterly"}
         timescale = timescale_translation[timescale]
 
@@ -109,10 +109,12 @@ class Financials:
         ts_url_base = f"https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/{self._symbol}?symbol={self._symbol}"
         url = ts_url_base + "&type=" + ",".join([timescale + k for k in keys])
         # Yahoo returns maximum 4 years or 5 quarters, regardless of start_dt:
-        start_dt = datetime.datetime(2016, 12, 31)
-        end = pd.Timestamp.utcnow().ceil("D")
-        url += f"&period1={int(start_dt.timestamp())}&period2={int(end.timestamp())}"
-
+        print("enddate", enddate)
+        end = pd.Timestamp.utcnow().ceil("D") if enddate is None else pd.Timestamp(enddate).ceil("D")
+        url += f"&period2={int(end.timestamp())}"
+        # start_dt = datetime.datetime(2016, 12, 31)
+        # url += f"&period1={int(start_dt.timestamp())}&period2={int(end.timestamp())}"
+        print(url)
         # Step 3: fetch and reshape data
         json_str = self._data.cache_get(url=url, proxy=proxy).text
         json_data = json.loads(json_str)

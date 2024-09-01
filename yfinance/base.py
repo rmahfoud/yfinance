@@ -330,7 +330,7 @@ class TickerBase:
             return dict_data
         return data
 
-    def get_income_stmt(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
+    def get_income_stmt(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
         """
         :Parameters:
             as_dict: bool
@@ -348,7 +348,7 @@ class TickerBase:
         """
         self._fundamentals.proxy = proxy or self.proxy
 
-        data = self._fundamentals.financials.get_income_time_series(freq=freq, proxy=proxy)
+        data = self._fundamentals.financials.get_income_time_series(freq=freq, proxy=proxy, enddate=enddate)
 
         if pretty:
             data = data.copy()
@@ -357,13 +357,13 @@ class TickerBase:
             return data.to_dict()
         return data
 
-    def get_incomestmt(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
-        return self.get_income_stmt(proxy, as_dict, pretty, freq)
+    def get_incomestmt(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
+        return self.get_income_stmt(proxy, as_dict, pretty, freq, enddate)
 
-    def get_financials(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
-        return self.get_income_stmt(proxy, as_dict, pretty, freq)
+    def get_financials(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
+        return self.get_income_stmt(proxy, as_dict, pretty, freq, enddate)
 
-    def get_balance_sheet(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
+    def get_balance_sheet(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
         """
         :Parameters:
             as_dict: bool
@@ -381,7 +381,7 @@ class TickerBase:
         """
         self._fundamentals.proxy = proxy or self.proxy
 
-        data = self._fundamentals.financials.get_balance_sheet_time_series(freq=freq, proxy=proxy)
+        data = self._fundamentals.financials.get_balance_sheet_time_series(freq=freq, proxy=proxy, enddate=enddate)
 
         if pretty:
             data = data.copy()
@@ -390,10 +390,10 @@ class TickerBase:
             return data.to_dict()
         return data
 
-    def get_balancesheet(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
-        return self.get_balance_sheet(proxy, as_dict, pretty, freq)
+    def get_balancesheet(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
+        return self.get_balance_sheet(proxy, as_dict, pretty, freq, enddate)
 
-    def get_cash_flow(self, proxy=None, as_dict=False, pretty=False, freq="yearly") -> Union[pd.DataFrame, dict]:
+    def get_cash_flow(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None) -> Union[pd.DataFrame, dict]:
         """
         :Parameters:
             as_dict: bool
@@ -411,7 +411,7 @@ class TickerBase:
         """
         self._fundamentals.proxy = proxy or self.proxy
 
-        data = self._fundamentals.financials.get_cash_flow_time_series(freq=freq, proxy=proxy)
+        data = self._fundamentals.financials.get_cash_flow_time_series(freq=freq, proxy=proxy, enddate=enddate)
 
         if pretty:
             data = data.copy()
@@ -420,8 +420,8 @@ class TickerBase:
             return data.to_dict()
         return data
 
-    def get_cashflow(self, proxy=None, as_dict=False, pretty=False, freq="yearly"):
-        return self.get_cash_flow(proxy, as_dict, pretty, freq)
+    def get_cashflow(self, proxy=None, as_dict=False, pretty=False, freq="yearly", enddate=None):
+        return self.get_cash_flow(proxy, as_dict, pretty, freq, enddate)
 
     def get_dividends(self, proxy=None) -> pd.Series:
         return self._lazy_load_price_history().get_dividends(proxy)
